@@ -50,6 +50,66 @@ if ("present","absent" -notcontains $state)
     Fail-Json $result "state is $state; must be present or absent"
 }
 
+Function Compare-Version
+{
+    [CmdletBinding()]
+
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$v1,
+        [Parameter(Mandatory=$true)]
+        [string]$v2
+    )
+
+    $releasesV1 = $v1 -Split "-", 2, "SimpleMatch"
+    $releasesV2 = $v2 -Split "-", 2, "SimpleMatch"
+
+    $versionsV1 = $releasesV1[0] -Split ".", 0, "SimpleMatch"
+    $versionsV2 = $releasesV2[0] -Split ".", 0, "SimpleMatch"
+
+    for ($i = 0; $i -lt $versionsV1.Length -and $i -lt $versionsV2.Length; $i++)
+    {
+        if ([Int32]$versionsV1[$i] -lt [Int32]$versionsV2[$i])
+        {
+            return -1
+        }
+        elseif ([Int32]$versionsV1[$i] -gt [Int32]$versionsV2[$i])
+        {
+            return 1
+        }
+    }
+
+    if ($versionsV1.Length -lt $versionsV2.Length)
+    {
+        return -1
+    }
+    elseif ($versionsV1.Length -gt $versionsV2.Length)
+    {
+        return 1
+    }
+
+    if ($releasesV1.Length -gt $releasesV2.Length)
+    {
+        return -1
+    }
+    elseif ($releasesV1.Length -lt $releasesV2.Length)
+    {
+        return 1
+    }
+    elseif ($releasesV1.Length -eq 2)
+    {
+        if ($releasesV1[1] -lt $releasesV2[1])
+        {
+            return -1
+        }
+        elseif ($releasesV1[1] -gt $releasesV2[1])
+        {
+            return 1
+        }
+    }
+
+    0
+}
 
 Function Chocolatey-Install-Upgrade
 {
@@ -74,7 +134,7 @@ Function Chocolatey-Install-Upgrade
     {
         $script:executable = "choco.exe"
 
-        if ((choco --version) -lt '0.9.9')
+        if ((Compare-Version (choco --version) '0.9.9') -lt 0)
         {
             Choco-Upgrade chocolatey 
         }
