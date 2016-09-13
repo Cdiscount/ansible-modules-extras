@@ -70,24 +70,32 @@ Function Test-RegistryValueData {
 Function Compare-RegistryData {
     Param (
         [parameter(Mandatory=$true)]
-        [AllowEmptyString()]$ReferenceData,
+        [AllowEmptyString()][AllowNull()]$ReferenceData,
         [parameter(Mandatory=$true)]
         [AllowEmptyString()]$DifferenceData
-        )
+    )
 
-        if ($ReferenceData -is [String] -or $ReferenceData -is [int]) {
-            if ($ReferenceData -eq $DifferenceData) {
-                return $true
-            } else {
-                return $false
-            }
-        } elseif ($ReferenceData -is [Object[]]) {
+    if ($ReferenceData -ne $null) {
+        if ($ReferenceData -is [Object[]]) {
             if (@(Compare-Object $ReferenceData $DifferenceData -SyncWindow 0).Length -eq 0) {
                 return $true
             } else {
                 return $false
             }
+        } else {
+            if ($ReferenceData -eq $DifferenceData) {
+                return $true
+            } else {
+                return $false
+            }
         }
+    } else {
+        if ($DifferenceData.count -eq 0) {
+            return $true
+        } else {
+            return $false
+        }
+    }
 }
 
 # Simplified version of Convert-HexStringToByteArray from
@@ -97,7 +105,9 @@ Function Compare-RegistryData {
 function Convert-RegExportHexStringToByteArray
 {
     Param (
-     [parameter(Mandatory=$true)] [String] $String
+     [parameter(Mandatory=$true)]
+     [AllowEmptyString()]
+     [String] $String
     )
 
 # remove 'hex:' from the front of the string if present
