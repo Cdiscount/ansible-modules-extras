@@ -65,7 +65,7 @@ else
 }
 
 try {
-    $task = Get-ScheduledTask -TaskPath "$path" | Where-Object {$_.TaskName -eq "$name"}
+    $task = Get-ScheduledTask -TaskPath "$path" -ErrorAction SilentlyContinue | Where-Object {$_.TaskName -eq "$name"}
 
     # Correlate task state to enable variable, used to calculate if state needs to be changed
     $taskState = if ($task) { $task.State } else { $null }
