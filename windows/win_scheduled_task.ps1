@@ -27,7 +27,7 @@ $params = Parse-Args $args;
 $days_of_week = Get-AnsibleParam $params -name "days_of_week"
 $enabled = Get-AnsibleParam $params -name "enabled" -default $true
 $enabled = $enabled | ConvertTo-Bool
-$description = Get-AnsibleParam $params -name "description" -default " "
+$description = Get-AnsibleParam $params -name "description" -default ""
 $path = Get-AnsibleParam $params -name "path"
 $argument = Get-AnsibleParam $params -name "argument"
 
@@ -138,6 +138,9 @@ try {
     }
 
     if ( ($state -eq "present") -and ($exists -eq $false) ){
+        if (-not $description) {
+            $description = " "
+        }
         Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
         $task = Get-ScheduledTask -TaskName $name
         Set-Attr $result "msg" "Added new task $name"
@@ -150,6 +153,9 @@ try {
         }
         else {
             Unregister-ScheduledTask -TaskName $name -Confirm:$false
+            if (-not $description) {
+                $description = " "
+            }
             Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
             Set-Attr $result "msg" "Updated task $name"
             $result.changed = $true
