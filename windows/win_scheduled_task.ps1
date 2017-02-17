@@ -31,6 +31,8 @@ $description = Get-AnsibleParam $params -name "description" -default ""
 $path = Get-AnsibleParam $params -name "path"
 $argument = Get-AnsibleParam $params -name "argument"
 
+$pass = Get-AnsibleParam -obj $params -name "password"
+
 $result = New-Object PSObject;
 Set-Attr $result "changed" $false;
 
@@ -44,7 +46,6 @@ $execute = Get-AnsibleParam -obj $params -name execute -failifempty $present_arg
 $frequency = Get-AnsibleParam -obj $params -name frequency -failifempty $present_args_required -resultobj $result
 $time = Get-AnsibleParam -obj $params -name time -failifempty $present_args_required -resultobj $result
 $user = Get-AnsibleParam -obj $params -name user -failifempty $present_args_required -resultobj $result
-
 
 # Mandatory Vars
 if ($frequency -eq "weekly")
@@ -141,7 +142,12 @@ try {
         if (-not $description) {
             $description = " "
         }
-        Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
+        if ($pass) {
+            Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -User "$user" -Password "$pass"
+        }
+        else {
+            Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
+        }
         $task = Get-ScheduledTask -TaskName $name
         Set-Attr $result "msg" "Added new task $name"
         $result.changed = $true
@@ -156,7 +162,12 @@ try {
             if (-not $description) {
                 $description = " "
             }
-            Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
+            if ($pass) {
+                Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -User "$user" -Password "$pass"
+            }
+            else {
+                Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Description $description -TaskPath $path -Settings $settings -Principal $principal
+            }
             Set-Attr $result "msg" "Updated task $name"
             $result.changed = $true
         }
